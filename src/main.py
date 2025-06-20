@@ -3,9 +3,6 @@ import textwrap
 
 from google import genai
 
-from IPython.display import display
-from IPython.display import Markdown
-
 import signal
 from elevenlabs.client import ElevenLabs
 from elevenlabs import voices
