@@ -11,6 +11,7 @@ from elevenlabs.conversational_ai.default_audio_interface import DefaultAudioInt
 from elevenlabs import play
 
 import textwrap
+import speech_recognition as speech_rec
 
 def to_markdown(text):
     text = text.replace('•', '  *')
@@ -30,6 +31,28 @@ my_model = "gemini-2.0-flash"
 client = genai.Client(api_key=API_KEY)
 chat = client.chats.create(model=my_model)
 
+#SPEECH RECOGNITION SETUP
+recognizer = speech_rec.Recognizer()
+recognizer.pause_threshold = 2.0
+
+def listen_for_audio() -> str:
+    # Use the default microphone as the audio source
+    with speech_rec.Microphone() as source:
+        print("Listening...")
+        audio = recognizer.listen(source)
+
+        try:
+            said_text = recognizer.recognize_google(audio)
+            print("You said: ", said_text)
+            return said_text
+
+        except speech_rec.UnknownValueError:
+            print("Sorry, could not understand the audio.")
+            return None
+        except speech_rec.RequestError:
+            print("Could not request results; check your internet connection.")
+            return None
+
 #ELEVENLABS SETUP
 elevenlabs = ElevenLabs(api_key=ElevenLabsAPIKey)
 
@@ -43,13 +66,19 @@ def speak_text(_text):
 
     play(audio)
 
+
 #Function Prompt our AI
 def prompt_ai():
   fullResponse = ""
   keep_talking = True
 
   while keep_talking:
-    user_prompt = input("\nPrompt: \n") #Ask the user to say something
+    user_prompt = listen_for_audio() #input("\nPrompt: \n") #Ask the user to say something
+
+    if(user_prompt == None):
+        print("Sorry, I didn't catch that, please try again")
+        continue
+
 
     if user_prompt != "exit": #If they didn't say exit, send their message to our chatbot
 
@@ -58,27 +87,33 @@ def prompt_ai():
       print("\nJOYCE: ")
 
       for chunk in response: #Get the response
-        print(chunk.text)
+        #print(chunk.text)
         fullResponse += chunk.text
 
       print("FULL RESP: " + fullResponse)
       speak_text(fullResponse)
       fullResponse = ''
 
+
     else: # Otherwise, they said exit, so leave
       keep_talking = False
+
 
 prompt_ai()
 
 
+#DEBUGGING SPEECH LISTENER
+'''
+print("Please say something...")
+listen_for_audio()
+'''
 
 
 
-
-def get_voices():
+'''def get_voices():
     response = elevenlabs.voices.get_all()
     print(response.voices)
-
+'''
 #CODE FOR USING THEIR AGENT/LLM
 '''conversation = Conversation(
     # API client and agent ID.
