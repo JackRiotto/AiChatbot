@@ -34,6 +34,7 @@ chat = client.chats.create(model=my_model)
 #SPEECH RECOGNITION SETUP
 recognizer = speech_rec.Recognizer()
 recognizer.pause_threshold = 2.0
+recognizer.energy_threshold = 500
 
 def listen_for_audio() -> str:
     # Use the default microphone as the audio source
