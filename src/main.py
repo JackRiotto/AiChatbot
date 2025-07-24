@@ -1,5 +1,6 @@
 import pathlib
 import textwrap
+import sys
 
 from google import genai
 
@@ -12,6 +13,8 @@ from elevenlabs import play
 
 import textwrap
 import speech_recognition as speech_rec
+
+import faceRecognition
 
 def to_markdown(text):
     text = text.replace('•', '  *')
@@ -33,13 +36,13 @@ chat = client.chats.create(model=my_model)
 
 #SPEECH RECOGNITION SETUP
 recognizer = speech_rec.Recognizer()
-recognizer.pause_threshold = 2.0
+recognizer.pause_threshold = 1.5
 recognizer.energy_threshold = 500
 
 def listen_for_audio() -> str:
     # Use the default microphone as the audio source
     with speech_rec.Microphone() as source:
-        print("Listening...")
+        print("Listening...You can say 'exit' to quit")
         audio = recognizer.listen(source)
 
         try:
@@ -67,8 +70,7 @@ def speak_text(_text):
 
     play(audio)
 
-
-#Function Prompt our AI
+#---Function Prompt our AI----
 def prompt_ai():
   fullResponse = ""
   keep_talking = True
@@ -97,11 +99,37 @@ def prompt_ai():
 
 
     else: # Otherwise, they said exit, so leave
-      keep_talking = False
+        speak_text("Bye bye")
+        keep_talking = False
 
+
+#---ASK USER IF TO USE FACE RECOGNITION----
+def ask_recognition() -> str:
+    print('Would you like to use face recognition?: y/n')
+    answer = str(input())
+
+    if (answer != 'yes' and answer != 'y' and answer !='n' and answer !='no'):
+        print('Sorry I didn\'t understand your answer please answer yes or no')
+        ask_recognition()
+    else:
+        return answer
+
+
+# -----------------OUR PROGRAM STARTS HERE--------------------
+
+_answer = ask_recognition()
+
+if(_answer == 'yes' or _answer == 'y'):
+    print("Opening face recognition. Press q to quit at any time once the window is open")
+    _name = faceRecognition.recognize_face_and_get_name()
+    if(_name != ""):
+        speak_text("Hi " + _name)
 
 prompt_ai()
 
+sys.exit(0)
+
+#faceRecognition.recognize_face()
 
 #DEBUGGING SPEECH LISTENER
 '''
