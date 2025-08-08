@@ -3,12 +3,11 @@ import textwrap
 import sys
 
 from google import genai
+import requests
 
 import signal
 from elevenlabs.client import ElevenLabs
-from elevenlabs import voices
-from elevenlabs.conversational_ai.conversation import Conversation
-from elevenlabs.conversational_ai.default_audio_interface import DefaultAudioInterface
+
 from elevenlabs import play
 
 import textwrap
@@ -27,12 +26,17 @@ import os
 
 os.environ['PATH'] += os.pathsep + ffmpegPath
 
+'''
 # GOOGLE IMPLEMENTATION
 #CONFIGURE OUR AI
 my_model = "gemini-2.0-flash"
 
 client = genai.Client(api_key=API_KEY)
 chat = client.chats.create(model=my_model)
+'''
+
+# OLLAMA SETUP
+my_model = "gemma3:1b"
 
 #SPEECH RECOGNITION SETUP
 recognizer = speech_rec.Recognizer()
@@ -71,6 +75,7 @@ def speak_text(_text):
     play(audio)
 
 #---Function Prompt our AI----
+''' GOOGLE GEMINI VERSION
 def prompt_ai():
   fullResponse = ""
   keep_talking = True
@@ -102,6 +107,55 @@ def prompt_ai():
         speak_text("Bye bye")
         keep_talking = False
 
+'''
+
+personality = """
+You are Joyce, a fun and helpful assistant.
+Always answer cheerfully and use formal language.
+"""
+
+
+def ask_ollama(prompt, model= my_model):
+    full_prompt = personality.strip() + "\n\nUser: " + prompt + "\nAssistant:"
+    url = "http://localhost:11434/api/generate"
+    payload = {
+        "model": model,
+        "prompt": full_prompt,
+        "stream": False
+    }
+    response = requests.post(url, json=payload)
+    return response.json()["response"]
+
+def prompt_ai():
+  fullResponse = ""
+  keep_talking = True
+
+  while keep_talking:
+    user_prompt = listen_for_audio() #input("\nPrompt: \n") #Ask the user to say something
+
+    if(user_prompt == None):
+        print("Sorry, I didn't catch that, please try again")
+        continue
+
+
+    if user_prompt != "exit": #If they didn't say exit, send their message to our chatbot
+
+      response = ask_ollama(user_prompt)
+
+      print("\nJOYCE: ")
+
+      for chunk in response: #Get the response
+        print(chunk)
+        fullResponse += chunk
+
+      print("FULL RESP: " + fullResponse)
+      speak_text(fullResponse)
+      fullResponse = ''
+
+
+    else: # Otherwise, they said exit, so leave
+        speak_text("Bye bye")
+        keep_talking = False
 
 #---ASK USER IF TO USE FACE RECOGNITION----
 def ask_recognition() -> str:
@@ -126,6 +180,8 @@ if(_answer == 'yes' or _answer == 'y'):
         speak_text("Hi " + _name)
 
 prompt_ai()
+
+
 
 sys.exit(0)
 
