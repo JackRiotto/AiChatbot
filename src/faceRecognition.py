@@ -15,13 +15,17 @@ def recognize_face_and_get_name() -> str:
     jack_image = face_recognition.load_image_file("private/IMG_2840.JPG")
     jack_face_recognition = face_recognition.face_encodings(jack_image)[0]
 
+    dana_image = face_recognition.load_image_file("private/Dana.JPEG")
+    dana_face_recognition = face_recognition.face_encodings(dana_image)[0]
 
     # Create arrays of known face encodings and their names
     known_face_encodings = [
+        dana_face_recognition,
         jack_face_recognition
     ]
 
     known_face_names = [
+        "Dana",
         "Jack"
     ]
 
@@ -120,9 +124,12 @@ def recognize_face():
     jack_image = face_recognition.load_image_file("private/IMG_2840.JPG")
     jack_face_recognition = face_recognition.face_encodings(jack_image)[0]
 
+    dana_image = face_recognition.load_image_file("private/Dana.JPEG")
+    dana_face_recognition = face_recognition.face_encodings(dana_image)[0]
 
     # Create arrays of known face encodings and their names
     known_face_encodings = [
+        dana_face_recognition,
         jack_face_recognition
     ]
 
