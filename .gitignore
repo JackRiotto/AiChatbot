@@ -200,3 +200,4 @@ cython_debug/
 .idea\*
 /.idea
 /src/private/
+/src/private
