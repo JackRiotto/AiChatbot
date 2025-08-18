@@ -2,6 +2,26 @@ import face_recognition
 import cv2
 import numpy as np
 
+# OBJECT RECOGNITION SETUP
+import math
+from ultralytics import YOLO
+model = YOLO("yolo-Weights/yolov8n.pt")
+
+classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+              "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+              "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+              "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+              "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+              "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+              "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+              "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+              "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+              "teddy bear", "hair drier", "toothbrush"
+              ]
+
+#-------------------------------
+
+
 def recognize_face_and_get_name() -> str:
     frameCounter = 0
     checkRate = 30 #used to say how often we run the facial recognition so as not to slow down computer
@@ -127,7 +147,6 @@ def recognize_face():
     ]
 
     known_face_names = [
-        "Dana",
         "Jack"
     ]
 
@@ -140,6 +159,8 @@ def recognize_face():
     while True:
         # Grab a single frame of video
         ret, frame = video_capture.read()
+        results = model(frame, stream=True, verbose=False)
+
         frameCounter = frameCounter + 1
 
         # Only process every other frame of video to save time
@@ -181,6 +202,8 @@ def recognize_face():
         process_this_frame = not process_this_frame
 
         # Display the results
+
+        #FACES
         for (top, right, bottom, left), name in zip(face_locations, face_names):
             # Scale back up face locations since the frame we detected in was scaled to 1/4 size
             top *= 4
@@ -195,6 +218,37 @@ def recognize_face():
             cv2.rectangle(frame, (left - 30, bottom - 5), (right + 30, bottom + 30), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 36, bottom + 20), font, 1.0, (255, 255, 255), 1)
+
+        #OBJECTS
+            # coordinates
+            for r in results:
+                boxes = r.boxes
+
+                for box in boxes:
+                    # bounding box
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)  # convert to int values
+
+                    # put box in cam
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
+
+                    # confidence
+                    confidence = math.ceil((box.conf[0] * 100)) / 100
+                    #print("Confidence --->", confidence)
+
+                    # class name
+                    cls = int(box.cls[0])
+                    #print("Class name -->", classNames[cls])
+
+                    # object details
+                    org = [x1, y1]
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    fontScale = 1
+                    color = (255, 0, 0)
+                    thickness = 2
+
+                    cv2.putText(frame, classNames[cls], org, font, fontScale, color, thickness)
+
 
         # Display the resulting image
         cv2.imshow('Video', frame)

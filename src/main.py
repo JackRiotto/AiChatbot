@@ -121,12 +121,13 @@ _answer = ask_recognition()
 
 if(_answer == 'yes' or _answer == 'y'):
     print("Opening face recognition. Press q to quit at any time once the window is open")
-    _name = faceRecognition.recognize_face_and_get_name()
+    faceRecognition.recognize_face()
+    '''_name = faceRecognition.recognize_face_and_get_name()
     if(_name != ""):
         speak_text("Hi " + _name)
 
 prompt_ai()
-
+'''
 sys.exit(0)
 
 #faceRecognition.recognize_face()
