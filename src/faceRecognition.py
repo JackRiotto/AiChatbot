@@ -219,36 +219,6 @@ def recognize_face():
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 36, bottom + 20), font, 1.0, (255, 255, 255), 1)
 
-        #OBJECTS
-            # coordinates
-            for r in results:
-                boxes = r.boxes
-
-                for box in boxes:
-                    # bounding box
-                    x1, y1, x2, y2 = box.xyxy[0]
-                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)  # convert to int values
-
-                    # put box in cam
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
-
-                    # confidence
-                    confidence = math.ceil((box.conf[0] * 100)) / 100
-                    #print("Confidence --->", confidence)
-
-                    # class name
-                    cls = int(box.cls[0])
-                    #print("Class name -->", classNames[cls])
-
-                    # object details
-                    org = [x1, y1]
-                    font = cv2.FONT_HERSHEY_SIMPLEX
-                    fontScale = 1
-                    color = (255, 0, 0)
-                    thickness = 2
-
-                    cv2.putText(frame, classNames[cls], org, font, fontScale, color, thickness)
-
 
         # Display the resulting image
         cv2.imshow('Video', frame)
@@ -261,3 +231,75 @@ def recognize_face():
     video_capture.release()
     cv2.destroyAllWindows()
 
+#base Function
+def recognize_object():
+    frameCounter = 0
+    checkRate = 30 #used to say how often we run the facial recognition so as not to slow down computer
+    #Get a reference to webcam #0
+
+    video_capture = cv2.VideoCapture(0)
+
+    process_this_frame = True
+
+    while True:
+        # Grab a single frame of video
+        ret, frame = video_capture.read()
+        results = model(frame, stream=True, verbose=False)
+
+        frameCounter = frameCounter + 1
+
+        # Only process every other frame of video to save time
+        if (frameCounter%checkRate == 0) or frameCounter < 2:
+            # Resize frame of video to 1/4 size for faster face recognition processing
+            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+
+            # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            rgb_small_frame = small_frame[:, :, ::-1]
+
+            #Fix compute_face_desciptor crash
+            rgb_small_frame = cv2.cvtColor(rgb_small_frame, cv2.COLOR_BGR2RGB)
+
+        process_this_frame = not process_this_frame
+
+        # Display the results
+
+        #OBJECTS
+        # coordinates
+        for r in results:
+            boxes = r.boxes
+
+            for box in boxes:
+                # bounding box
+                x1, y1, x2, y2 = box.xyxy[0]
+                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)  # convert to int values
+
+                # put box in cam
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
+
+                # confidence
+                confidence = math.ceil((box.conf[0] * 100)) / 100
+                #print("Confidence --->", confidence)
+
+                # class name
+                cls = int(box.cls[0])
+                #print("Class name -->", classNames[cls])
+
+                # object details
+                org = [x1, y1]
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                fontScale = 1
+                color = (255, 0, 0)
+                thickness = 2
+
+                cv2.putText(frame, classNames[cls], org, font, fontScale, color, thickness)
+
+        # Display the resulting image
+        cv2.imshow('Video', frame)
+
+        # Hit 'q' on the keyboard to quit!
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release handle to the webcam
+    video_capture.release()
+    cv2.destroyAllWindows()
